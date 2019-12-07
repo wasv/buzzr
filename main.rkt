@@ -31,9 +31,10 @@
 
     (buzzr:check (buzzr:publish client TOPIC #"test" 0 0))
 
-    (println (buzzr:receive client 10000))
+    (define message (buzzr:check (buzzr:receive client 1000)))
 
-    (buzzr:check (buzzr:client-disconnect client))))
+    (buzzr:check (buzzr:client-disconnect client))
+    (println message)))
 
 (module+ test
   ;; Any code in this `test` submodule runs when this file is run using DrRacket

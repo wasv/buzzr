@@ -2,7 +2,8 @@
 
 (require racket/list
          ffi/unsafe
-         ffi/unsafe/define)
+         ffi/unsafe/define
+         ffi/unsafe/cvector)
 
 (provide (prefix-out buzzr: (all-defined-out)))
 
@@ -108,7 +109,9 @@
 
 (define-paho receive
   (_fun _MQTTClient_t [topic : (_ptr o _string)] [topiclen : (_ptr o _int)] [message : (_ptr o _MQTTClient_message_t-pointer)] _int
-        -> [result : _error_code] -> (list result (list topic topiclen message)))
+        -> [result : _error_code] -> (list result (list topic (list->bytes (cvector->list (make-cvector*
+                                                               (MQTTClient_message_t-payload message) _uint8
+                                                               (MQTTClient_message_t-payloadlen message)))))))
      #:c-id MQTTClient_receive)
 
 (define-paho version-info
