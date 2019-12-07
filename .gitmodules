@@ -1,3 +1,0 @@
-[submodule "lib/paho"]
-	path = lib/paho
-	url = https://github.com/eclipse/paho.mqtt.c
