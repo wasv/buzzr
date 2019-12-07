@@ -68,27 +68,6 @@
     (make-MQTTClient_connectOptions_t
     (bytes->list #"MQTC") 6 60 1 1 #f #f #f 30 0 #f 0 #f 0 (list #f 0 0) (list 0 #f) -1 0))
 
-(define-cstruct _MQTTProperties_t
-    ([count _int]
-     [max_count _int]
-     [length _int]
-     [array _pointer]))
-
-(define-cstruct _MQTTClient_message_t
-    ([struct_id (_array/list _byte 4)]
-     [struct_version _int]
-     [payloadlen _int]
-     [payload _pointer]
-     [qos _int]
-     [retained _int]
-     [dup _int]
-     [msgid _int]
-     [properties _MQTTProperties_t]))
-
-(define (message-create payload qos retained)
-    (make-MQTTClient_message_t
-    (bytes->list #"MQTM") 1 (bytes-length payload) payload qos retained 0 0 0 0 (list 0 0 0 #f)))
-
 ;; Start of FFI Imports
 (define paho-ffi-lib (ffi-lib "libpaho-mqtt3cs" (list "1")))
 (define-ffi-definer define-paho paho-ffi-lib)
@@ -104,6 +83,11 @@
 (define-paho client-disconnect
   (_fun _MQTTClient_t _int -> _error_code)
     #:c-id MQTTClient_disconnect)
+
+(define-paho publish
+  (_fun _MQTTClient_t _string [payloadLen : _int = (bytes-length payload)] [payload : _bytes] _int _int (_ptr o _int)
+         -> _error_code)
+    #:c-id MQTTClient_publish)
 
 (define-paho version-info
   (_fun -> _MQTTClient_nameValue_t-pointer)

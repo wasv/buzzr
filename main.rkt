@@ -23,6 +23,7 @@
     (define conn_opts (buzzr:connect-options-create))
 
     (buzzr:succeed-or-exit (buzzr:client-connect client conn_opts))
+    (buzzr:succeed-or-exit (buzzr:publish client "/topic" #"test" 0 0))
 
     (buzzr:client-disconnect client 0))
 
