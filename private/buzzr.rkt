@@ -3,27 +3,27 @@
 (require ffi/unsafe
          ffi/unsafe/define)
 
-(provide (all-defined-out))
+(provide (prefix-out buzzr: (all-defined-out)))
 
 ;; C Types
 (define-cpointer-type _MQTTClient_t)
 
-(define _paho_error_code
-    (_enum '(paho_success = 0
-             paho_error_generic = -1
-             paho_error_persistence_error = -2
-             paho_error_disconnected = -3
-             paho_error_max_messages_inflight = -4
-             paho_error_bad_utf8_string = -5
-             paho_error_null_parameter = -6
-             paho_error_topicname_trunacted = -7
-             paho_error_bad_structure = -8
-             paho_error_bad_qos = -9
-             paho_error_ssl_not_supported = -10
-             paho_error_bad_mqtt_version = -11
-             paho_error_bad_portocol = -14
-             paho_error_bad_mqtt_option = -15
-             pago_error_mqtt-version = -16)
+(define _error_code
+    (_enum '(success = 0
+             error-generic = -1
+             error-persistence-error = -2
+             error-disconnected = -3
+             error-max-messages-inflight = -4
+             error-bad-utf8-string = -5
+             error-null-parameter = -6
+             error-topicname-trunacted = -7
+             error-bad-structure = -8
+             error-bad-qos = -9
+             error-ssl-not-supported = -10
+             error-bad-mqtt-version = -11
+             error-bad-portocol = -14
+             error-bad-mqtt-option = -15
+             error-mqtt-version = -16)
            _fixint))
 
 
@@ -64,7 +64,7 @@
      [maxInflightMessages _int]
      [cleanstart _int]))
 
-(define (paho-mqtt-connect-options-create)
+(define (connect-options-create)
     (make-MQTTClient_connectOptions_t
     (bytes->list #"MQTC") 6 60 1 1 #f #f #f 30 0 #f 0 #f 0 (list #f 0 0) (list 0 #f) -1 0))
 
@@ -85,26 +85,38 @@
      [msgid _int]
      [properties _MQTTProperties_t]))
 
-(define (paho-mqtt-message-create payload len qos retained)
+(define (message-create payload qos retained)
     (make-MQTTClient_message_t
-    (bytes->list #"MQTM") 1 len payload qos retained 0 0 0 0 (list 0 0 0 #f)))
+    (bytes->list #"MQTM") 1 (bytes-length payload) payload qos retained 0 0 0 0 (list 0 0 0 #f)))
 
 ;; Start of FFI Imports
 (define paho-ffi-lib (ffi-lib "libpaho-mqtt3cs" (list "1")))
 (define-ffi-definer define-paho paho-ffi-lib)
 
-(define-paho paho-mqtt-client-create
-  (_fun [client : (_ptr o _MQTTClient_t)] _string _string _int _pointer -> _paho_error_code -> client)
+(define-paho client-create
+  (_fun [client : (_ptr o _MQTTClient_t)] _string _string _int _pointer -> _error_code -> client)
     #:c-id MQTTClient_create)
 
-(define-paho paho-mqtt-client-connect
-  (_fun _MQTTClient_t _MQTTClient_connectOptions_t-pointer -> _paho_error_code)
+(define-paho client-connect
+  (_fun _MQTTClient_t _MQTTClient_connectOptions_t-pointer -> _error_code)
     #:c-id MQTTClient_connect)
 
-(define-paho paho-mqtt-client-disconnect
-  (_fun _MQTTClient_t _int -> _paho_error_code)
+(define-paho client-disconnect
+  (_fun _MQTTClient_t _int -> _error_code)
     #:c-id MQTTClient_disconnect)
 
-(define-paho paho-mqtt-version-info
+(define-paho version-info
   (_fun -> _MQTTClient_nameValue_t-pointer)
     #:c-id MQTTClient_getVersionInfo)
+
+
+;; Start of helper functions.
+(define paho-version
+    (MQTTClient_nameValue_t-value (version-info)))
+
+(define (succeed-or-exit result)
+    (when (not (equal? result 'success))
+        (begin
+         (println result)
+         (exit 1))
+        ))

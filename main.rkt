@@ -12,33 +12,19 @@
 ;;   $ raco pkg remove <<name>>
 ;; To view documentation:
 ;;   $ raco docs <<name>>
-;;
-;; For your convenience, we have included LICENSE-MIT and LICENSE-APACHE files.
-;; If you would prefer to use a different license, replace those files with the
-;; desired license.
-;;
-;; Some users like to add a `private/` directory, place auxiliary files there,
-;; and require them in `main.rkt`.
-;;
-;; See the current version of the racket style guide here:
-;; http://docs.racket-lang.org/style/index.html
 
-;; Code here
-
-(require "private/paho.rkt")
+(require "private/buzzr.rkt")
+(provide (all-from-out "private/buzzr.rkt"))
 
 (module* main #f
-    (require racket/match)
-    (println (MQTTClient_nameValue_t-value (paho-mqtt-version-info)))
-
     (define ADDRESS "tcp://localhost:1883")
-    (define CLIENTID "ExampleClientPub")
-    (define client (paho-mqtt-client-create ADDRESS CLIENTID 0 #f))
-    (define conn_opts (paho-mqtt-connect-options-create))
+    (define CLIENTID "ExampleClient")
+    (define client (buzzr:client-create ADDRESS CLIENTID 0 #f))
+    (define conn_opts (buzzr:connect-options-create))
 
-    (match (paho-mqtt-client-connect client conn_opts)
-           ['paho_success (paho-mqtt-client-disconnect client 0) (exit 0)]
-           [x (println x) (exit 1)] ))
+    (buzzr:succeed-or-exit (buzzr:client-connect client conn_opts))
+
+    (buzzr:client-disconnect client 0))
 
 (module+ test
   ;; Any code in this `test` submodule runs when this file is run using DrRacket
