@@ -88,18 +88,15 @@
 
 (define-paho publish
   (_fun _MQTTClient_t _string [payloadLen : _int = (bytes-length payload)] [payload : _bytes] _int _int [token : (_ptr o _uint)]
-         -> [ result : _error_code] -> (list result token))
+         -> [result : _error_code] -> (list result token))
     #:c-id MQTTClient_publish)
 
 (define-paho version-info
-  (_fun -> _MQTTClient_nameValue_t-pointer)
+  (_fun -> [info : _MQTTClient_nameValue_t-pointer] -> (MQTTClient_nameValue_t-value info))
     #:c-id MQTTClient_getVersionInfo)
 
 
 ;; Start of helper functions.
-(define paho-version
-    (MQTTClient_nameValue_t-value (version-info)))
-
 (define (succeed-or-exit retval)
     (if (not (equal? (car retval) 'success))
         (begin
