@@ -7,4 +7,4 @@
 
 @defmodule[buzzr]
 
-MQTT Library for Racket using lwmqtt
+MQTT Library for Racket using paho

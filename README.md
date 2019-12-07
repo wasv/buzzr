@@ -1,4 +1,4 @@
 buzzr
 ===
 
-MQTT bindings for Racket using lwmqtt
+MQTT bindings for Racket using paho
