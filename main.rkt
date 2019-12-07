@@ -25,7 +25,20 @@
 
 ;; Code here
 
+(require "private/paho.rkt")
 
+(module* main #f
+    (require racket/match)
+    (println (MQTTClient_nameValue_t-value (paho-mqtt-version-info)))
+
+    (define ADDRESS "tcp://localhost:1883")
+    (define CLIENTID "ExampleClientPub")
+    (define client (paho-mqtt-client-create ADDRESS CLIENTID 0 #f))
+    (define conn_opts (paho-mqtt-connect-options-create))
+
+    (match (paho-mqtt-client-connect client conn_opts)
+           ['paho_success (paho-mqtt-client-disconnect client 0) (exit 0)]
+           [x (println x) (exit 1)] ))
 
 (module+ test
   ;; Any code in this `test` submodule runs when this file is run using DrRacket
