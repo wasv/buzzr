@@ -19,7 +19,7 @@
 (module* main #f
     (define ADDRESS "tcp://localhost:1883")
     (define CLIENTID "ExampleClient")
-    (define client (buzzr:client-create ADDRESS CLIENTID 0 #f))
+    (define client (cadr (buzzr:client-create ADDRESS CLIENTID)))
     (define conn_opts (buzzr:connect-options-create))
 
     (buzzr:succeed-or-exit (buzzr:client-connect client conn_opts))

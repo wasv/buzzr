@@ -1,6 +1,7 @@
 #lang racket/base
 
-(require ffi/unsafe
+(require racket/list
+         ffi/unsafe
          ffi/unsafe/define)
 
 (provide (prefix-out buzzr: (all-defined-out)))
@@ -73,20 +74,21 @@
 (define-ffi-definer define-paho paho-ffi-lib)
 
 (define-paho client-create
-  (_fun [client : (_ptr o _MQTTClient_t)] _string _string _int _pointer -> _error_code -> client)
+  (_fun [client : (_ptr o _MQTTClient_t)] _string _string [_int = 0] [_pointer = #f]
+        -> [result : _error_code] -> (list result client))
     #:c-id MQTTClient_create)
 
 (define-paho client-connect
-  (_fun _MQTTClient_t _MQTTClient_connectOptions_t-pointer -> _error_code)
+  (_fun _MQTTClient_t _MQTTClient_connectOptions_t-pointer -> [result : _error_code] -> (list result))
     #:c-id MQTTClient_connect)
 
 (define-paho client-disconnect
-  (_fun _MQTTClient_t _int -> _error_code)
+  (_fun _MQTTClient_t _int -> [result : _error_code] -> (list result))
     #:c-id MQTTClient_disconnect)
 
 (define-paho publish
-  (_fun _MQTTClient_t _string [payloadLen : _int = (bytes-length payload)] [payload : _bytes] _int _int (_ptr o _int)
-         -> _error_code)
+  (_fun _MQTTClient_t _string [payloadLen : _int = (bytes-length payload)] [payload : _bytes] _int _int [token : (_ptr o _uint)]
+         -> [ result : _error_code] -> (list result token))
     #:c-id MQTTClient_publish)
 
 (define-paho version-info
@@ -98,9 +100,9 @@
 (define paho-version
     (MQTTClient_nameValue_t-value (version-info)))
 
-(define (succeed-or-exit result)
-    (when (not (equal? result 'success))
+(define (succeed-or-exit retval)
+    (if (not (equal? (car retval) 'success))
         (begin
-         (println result)
+         (println (car retval))
          (exit 1))
-        ))
+        (rest retval)))
