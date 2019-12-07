@@ -17,15 +17,23 @@
 (provide (all-from-out "private/buzzr.rkt"))
 
 (module* main #f
+    (with-handlers ([exn:fail? (lambda (exn)
+                                    (println exn)
+                                    (exit 1))])
     (define ADDRESS "tcp://localhost:1883")
     (define CLIENTID "ExampleClient")
-    (define client (cadr (buzzr:client-create ADDRESS CLIENTID)))
+    (define TOPIC "topic")
+    (define client (buzzr:check (buzzr:client-create ADDRESS CLIENTID)))
     (define conn_opts (buzzr:connect-options-create))
 
-    (buzzr:succeed-or-exit (buzzr:client-connect client conn_opts))
-    (buzzr:succeed-or-exit (buzzr:publish client "/topic" #"test" 0 0))
+    (buzzr:check (buzzr:client-connect client conn_opts))
+    (buzzr:check (buzzr:subscribe client TOPIC 2))
 
-    (buzzr:client-disconnect client 0))
+    (buzzr:check (buzzr:publish client TOPIC #"test" 0 0))
+
+    (println (buzzr:receive client 10000))
+
+    (buzzr:check (buzzr:client-disconnect client))))
 
 (module+ test
   ;; Any code in this `test` submodule runs when this file is run using DrRacket

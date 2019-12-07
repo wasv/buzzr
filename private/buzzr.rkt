@@ -27,7 +27,6 @@
              error-mqtt-version = -16)
            _fixint))
 
-
 (define-cstruct _MQTTClient_nameValue_t
     ([name  _string]
      [value _string]))
@@ -65,6 +64,17 @@
      [maxInflightMessages _int]
      [cleanstart _int]))
 
+(define-cstruct _MQTTClient_message_t
+    ([struct_id (_array/list _byte 4)]
+     [struct_version _int]
+     [payloadlen _int]
+     [payload _pointer]
+     [qos _int]
+     [retained _int]
+     [dup _int]
+     [msgid _int]
+     [properties (_list-struct _int _int _int _pointer)]))
+
 (define (connect-options-create)
     (make-MQTTClient_connectOptions_t
     (bytes->list #"MQTC") 6 60 1 1 #f #f #f 30 0 #f 0 #f 0 (list #f 0 0) (list 0 #f) -1 0))
@@ -79,11 +89,11 @@
     #:c-id MQTTClient_create)
 
 (define-paho client-connect
-  (_fun _MQTTClient_t _MQTTClient_connectOptions_t-pointer -> [result : _error_code] -> (list result))
+  (_fun _MQTTClient_t _MQTTClient_connectOptions_t-pointer -> [result : _error_code] -> (list result '()))
     #:c-id MQTTClient_connect)
 
 (define-paho client-disconnect
-  (_fun _MQTTClient_t _int -> [result : _error_code] -> (list result))
+  (_fun _MQTTClient_t [_int = 100] -> [result : _error_code] -> (list result '()))
     #:c-id MQTTClient_disconnect)
 
 (define-paho publish
@@ -91,15 +101,23 @@
          -> [result : _error_code] -> (list result token))
     #:c-id MQTTClient_publish)
 
+(define-paho subscribe
+  (_fun _MQTTClient_t _string _int
+         -> [result : _error_code] -> (list result '()))
+    #:c-id MQTTClient_subscribe)
+
+(define-paho receive
+  (_fun _MQTTClient_t [topic : (_ptr o _string)] [topiclen : (_ptr o _int)] [message : (_ptr o _MQTTClient_message_t-pointer)] _int
+        -> [result : _error_code] -> (list result (list topic topiclen message)))
+     #:c-id MQTTClient_receive)
+
 (define-paho version-info
   (_fun -> [info : _MQTTClient_nameValue_t-pointer] -> (MQTTClient_nameValue_t-value info))
     #:c-id MQTTClient_getVersionInfo)
 
-
 ;; Start of helper functions.
-(define (succeed-or-exit retval)
+(define (check retval)
     (if (not (equal? (car retval) 'success))
         (begin
-         (println (car retval))
-         (exit 1))
-        (rest retval)))
+         (error (car retval)))
+        (cadr retval)))
