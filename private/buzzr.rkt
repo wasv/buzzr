@@ -76,9 +76,9 @@
      [msgid _int]
      [properties (_list-struct _int _int _int _pointer)]))
 
-(define (connect-options-create)
+(define (connect-options-create username password)
     (make-MQTTClient_connectOptions_t
-    (bytes->list #"MQTC") 6 60 1 1 #f #f #f 30 0 #f 0 #f 0 (list #f 0 0) (list 0 #f) -1 0))
+    (bytes->list #"MQTC") 6 60 1 1 #f username password 30 0 #f 0 #f 0 (list #f 0 0) (list 0 #f) -1 0))
 
 ;; Start of FFI Imports
 (define paho-ffi-lib (ffi-lib "libpaho-mqtt3cs" (list "1")))
